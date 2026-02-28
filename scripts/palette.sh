@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+if ! command -v fzf &>/dev/null; then
+  tmux display-message "tmux-palette: fzf not found"
+  exit 1
+fi
+
+HISTORY_FILE="${HOME}/.tmux/palette_history"
+MAX_HISTORY=50
+
+mkdir -p "$(dirname "$HISTORY_FILE")"
+
+COMMANDS=(
+  "Split pane horizontally	split-window -h"
+  "Split pane vertically	split-window -v"
+  "New window	new-window"
+  "Kill current pane	kill-pane"
+  "Kill current window	kill-window"
+  "Kill current session	kill-session"
+  "New session	new-session"
+  "Kill all other panes	kill-pane -a"
+  "Next window	next-window"
+  "Previous window	previous-window"
+  "Next layout	next-layout"
+  "Select pane: left	select-pane -L"
+  "Select pane: right	select-pane -R"
+  "Select pane: up	select-pane -U"
+  "Select pane: down	select-pane -D"
+  "Resize pane left	resize-pane -L 5"
+  "Resize pane right	resize-pane -R 5"
+  "Resize pane up	resize-pane -U 5"
+  "Resize pane down	resize-pane -D 5"
+  "Swap pane forward	swap-pane -D"
+  "Swap pane backward	swap-pane -U"
+  "Zoom/unzoom pane	resize-pane -Z"
+  "Rename window	command-prompt -I '#W' 'rename-window \"%%\"'"
+  "Rename session	command-prompt -I '#S' 'rename-session \"%%\"'"
+  "Choose window (tree)	choose-tree -w"
+  "Choose session (tree)	choose-tree -s"
+  "Switch to previous session	switch-client -p"
+  "Switch to next session	switch-client -n"
+  "Move window left	swap-window -t -1"
+  "Move window right	swap-window -t +1"
+  "Last window	last-window"
+  "Break pane to new window	break-pane"
+  "Rotate panes	rotate-window"
+  "Last session	switch-client -l"
+  "Paste buffer	paste-buffer"
+  "List buffers	list-buffers"
+  "Choose buffer	choose-buffer"
+  "Clear pane history	clear-history"
+  "Mark pane	select-pane -m"
+  "Detach client	detach-client"
+  "Reload tmux config	source-file $(tmux display-message -p '#{config_files}' | tr ',' '\n' | tail -1)"
+  "Display pane numbers	display-panes"
+  "Toggle synchronize panes	set-option synchronize-panes"
+  "Enter copy mode	copy-mode"
+  "List all key bindings	list-keys"
+  "Show messages	show-messages"
+  "Clock mode	clock-mode"
+)
+
+build_list() {
+  declare -A seen
+
+  if [[ -s "$HISTORY_FILE" ]]; then
+    while IFS=$'\t' read -r label cmd; do
+      if [[ -z "${seen[$cmd]}" ]]; then
+        seen[$cmd]=1
+        printf '%s\t%s\n' "* $label" "$cmd"
+      fi
+    done < <(tail -n "$MAX_HISTORY" "$HISTORY_FILE" | tac)
+  fi
+
+  for entry in "${COMMANDS[@]}"; do
+    label="${entry%%	*}"
+    cmd="${entry#*	}"
+    if [[ -z "${seen[$cmd]}" ]]; then
+      seen[$cmd]=1
+      printf '%s\t%s\n' "  $label" "$cmd"
+    fi
+  done
+}
+
+selection="$(
+  build_list | fzf \
+    --prompt="  " \
+    --layout=reverse \
+    --no-info \
+    --no-scrollbar \
+    --no-border \
+    --delimiter=$'\t' \
+    --with-nth=1 \
+    --height=100% \
+    --bind='ctrl-d:half-page-down,ctrl-u:half-page-up'
+)"
+
+[[ -z "$selection" ]] && exit 0
+
+label="$(echo "$selection" | cut -f1 | sed 's/^[* ] //')"
+cmd="$(echo "$selection" | cut -f2)"
+
+printf '%s\t%s\n' "$label" "$cmd" >> "$HISTORY_FILE"
+
+tail_count="$(wc -l < "$HISTORY_FILE")"
+if (( tail_count > MAX_HISTORY * 2 )); then
+  tail -n "$MAX_HISTORY" "$HISTORY_FILE" > "${HISTORY_FILE}.tmp"
+  mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
+fi
+
+eval "tmux $cmd"
