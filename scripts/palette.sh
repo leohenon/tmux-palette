@@ -27,7 +27,7 @@ COMMANDS=(
   "Kill current pane	kill-pane"
   "Kill current window	kill-window"
   "Kill current session	kill-session"
-  "New session	new-session"
+  "New session	@pick_new_session"
   "Kill all other panes	kill-pane -a"
   "Next window	next-window"
   "Previous window	previous-window"
@@ -71,6 +71,25 @@ COMMANDS=(
   "Show messages	@pick_messages"
   "Clock mode	clock-mode"
 )
+
+pick_new_session() {
+  local selected base_name session_name suffix
+  selected="$({ find "$HOME" -mindepth 1 -maxdepth 3 -type d 2>/dev/null || true; } | sort -u | fzf "${FZF_OPTS[@]}" --prompt='dir> ')"
+  [[ -z "$selected" ]] && return 1
+  selected="$(cd "$selected" && pwd)"
+  base_name="$(basename "$selected")"
+  base_name="${base_name//./_}"
+  base_name="${base_name// /_}"
+  [[ -z "$base_name" ]] && base_name="main"
+  session_name="$base_name"
+  suffix=2
+  while tmux has-session -t="$session_name" 2>/dev/null; do
+    session_name="${base_name}_${suffix}"
+    suffix=$((suffix + 1))
+  done
+  tmux new-session -ds "$session_name" -c "$selected"
+  tmux switch-client -t "$session_name"
+}
 
 pick_session() {
   local sel
