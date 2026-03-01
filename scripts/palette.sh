@@ -46,7 +46,7 @@ COMMANDS=(
   "Rotate panes	rotate-window"
   "Last session	switch-client -l"
   "Paste buffer	paste-buffer"
-  "List buffers	list-buffers"
+  "List buffers	list-buffers | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
   "Choose buffer	choose-buffer"
   "Clear pane history	clear-history"
   "Mark pane	select-pane -m"
@@ -55,8 +55,8 @@ COMMANDS=(
   "Display pane numbers	display-panes"
   "Toggle synchronize panes	set-option synchronize-panes"
   "Enter copy mode	copy-mode"
-  "List all key bindings	list-keys"
-  "Show messages	show-messages"
+  "List all key bindings	list-keys | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
+  "Show messages	show-messages | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
   "Clock mode	clock-mode"
 )
 
