@@ -158,9 +158,9 @@ build_list() {
     while IFS=$'\t' read -r label cmd; do
       if [[ -z "${seen[$cmd]}" ]]; then
         seen[$cmd]=1
-        printf '%s\t%s\n' "* $label" "$cmd"
+        printf '%s\t%s\n' "$label" "$cmd"
       fi
-    done < <(tail -n "$MAX_HISTORY" "$HISTORY_FILE" | tac)
+    done < <(tail -n "$MAX_HISTORY" "$HISTORY_FILE" | awk '{a[NR]=$0} END{for(i=NR;i>=1;i--)print a[i]}')
   fi
 
   for entry in "${COMMANDS[@]}"; do
@@ -168,7 +168,7 @@ build_list() {
     cmd="${entry#*	}"
     if [[ -z "${seen[$cmd]}" ]]; then
       seen[$cmd]=1
-      printf '%s\t%s\n' "  $label" "$cmd"
+      printf '%s\t%s\n' "$label" "$cmd"
     fi
   done
 }
@@ -194,7 +194,7 @@ while true; do
 
   [[ -z "$selection" ]] && exit 0
 
-  label="$(echo "$selection" | cut -f1 | sed 's/^[* ] //')"
+  label="$(echo "$selection" | cut -f1)"
   cmd="$(echo "$selection" | cut -f2)"
 
   printf '%s\t%s\n' "$label" "$cmd" >> "$HISTORY_FILE"
