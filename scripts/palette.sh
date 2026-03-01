@@ -7,7 +7,7 @@ fi
 
 HISTORY_FILE="${HOME}/.tmux/palette_history"
 MAX_HISTORY=50
-ESC_BEHAVIOR="$(tmux show-option -gqv '@palette_esc')"
+ESC_BEHAVIOR="$(tmux show-option -gqv '@tmux_palette_esc')"
 ESC_BEHAVIOR="${ESC_BEHAVIOR:-back}"
 
 FZF_OPTS=(

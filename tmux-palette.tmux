@@ -3,7 +3,7 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 default_key="P"
-palette_key="$(tmux show-option -gqv '@palette_key')"
+palette_key="$(tmux show-option -gqv '@tmux_palette_key')"
 palette_key="${palette_key:-$default_key}"
 
 tmux bind-key "$palette_key" display-popup \
