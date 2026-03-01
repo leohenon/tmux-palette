@@ -68,7 +68,6 @@ COMMANDS=(
   "Mark pane	select-pane -m"
   "Detach client	detach-client"
   "Reload tmux config	source-file $(tmux display-message -p '#{config_files}' | tr ',' '\n' | tail -1)"
-  "Display pane numbers	display-panes"
   "Toggle synchronize panes	set-option synchronize-panes"
   "Enter copy mode	copy-mode"
   "List all key bindings	@pick_keys"
