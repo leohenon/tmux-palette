@@ -217,6 +217,12 @@ while true; do
   run_command "$cmd"
   result=$?
 
+  if [[ "$cmd" == *source-file* && $result -eq 0 ]]; then
+    printf '\033[2J\033[HConfig reloaded.\n'
+    sleep 0.7
+    break
+  fi
+
   if [[ "$cmd" != @* ]] || [[ $result -eq 0 ]]; then
     break
   fi
