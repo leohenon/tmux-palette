@@ -37,6 +37,8 @@ COMMANDS=(
   "Rename session	command-prompt -I '#S' 'rename-session \"%%\"'"
   "Choose window (tree)	choose-tree -w"
   "Choose session (tree)	choose-tree -s"
+  "Switch to session	!tmux list-sessions -F '#{session_name}' | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100% --prompt='session> ' | xargs -I{} tmux switch-client -t '{}'"
+  "Switch to window	!tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name}' | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100% --prompt='window> ' | cut -d' ' -f1 | xargs -I{} tmux select-window -t '{}'"
   "Switch to previous session	switch-client -p"
   "Switch to next session	switch-client -n"
   "Move window left	swap-window -t -1"
@@ -108,4 +110,8 @@ if (( tail_count > MAX_HISTORY * 2 )); then
   mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
 fi
 
-eval "tmux $cmd"
+if [[ "$cmd" == !* ]]; then
+  eval "${cmd#!}"
+else
+  eval "tmux $cmd"
+fi
