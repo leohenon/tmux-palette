@@ -28,6 +28,7 @@ COMMANDS=(
   "Kill current window	kill-window"
   "Kill current session	kill-session"
   "New session	@pick_new_session"
+  "New directory	@create_dir"
   "Kill all other panes	kill-pane -a"
   "Next window	next-window"
   "Previous window	previous-window"
@@ -72,9 +73,20 @@ COMMANDS=(
   "Clock mode	clock-mode"
 )
 
+create_dir() {
+  local parent name
+  parent="$({ echo "$HOME"; find "$HOME" -mindepth 1 -maxdepth 3 -type d 2>/dev/null | sort; } | fzf "${FZF_OPTS[@]}" --scheme=path --prompt='parent dir> ')"
+  [[ -z "$parent" ]] && return 1
+  printf '\033[2J\033[H'
+  read -r -p "Directory name: " name
+  [[ -z "$name" ]] && return 1
+  mkdir -p "$parent/$name"
+  tmux display-message "Created $parent/$name"
+}
+
 pick_new_session() {
   local selected base_name session_name suffix
-  selected="$({ find "$HOME" -mindepth 1 -maxdepth 3 -type d 2>/dev/null || true; } | sort -u | fzf "${FZF_OPTS[@]}" --prompt='dir> ')"
+  selected="$({ echo "$HOME"; find "$HOME" -mindepth 1 -maxdepth 3 -type d 2>/dev/null | sort; } | fzf "${FZF_OPTS[@]}" --scheme=path --prompt='dir> ')"
   [[ -z "$selected" ]] && return 1
   selected="$(cd "$selected" && pwd)"
   base_name="$(basename "$selected")"
