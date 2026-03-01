@@ -102,7 +102,7 @@ pick_kill_session() {
 
 create_dir() {
   local parent name
-  parent="$({ echo "$HOME"; find "$HOME" -mindepth 1 -maxdepth 3 -type d 2>/dev/null | sort; } | fzf "${FZF_OPTS[@]}" --scheme=path --prompt='parent dir> ')"
+  parent="$({ echo "$HOME"; find "$HOME" -mindepth 1 -maxdepth 3 -type d \( -name node_modules -o -name .git -o -name .cache -o -name .npm -o -name __pycache__ -o -name .venv -o -name venv -o -name snap -o -name flatpak \) -prune -o -type d -print 2>/dev/null | sort; } | fzf "${FZF_OPTS[@]}" --scheme=path --prompt='parent dir> ')"
   [[ -z "$parent" ]] && return 1
   printf '\033[2J\033[H'
   read -r -p "Directory name: " name
