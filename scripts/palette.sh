@@ -7,6 +7,16 @@ fi
 
 HISTORY_FILE="${HOME}/.tmux/palette_history"
 MAX_HISTORY=50
+ESC_BEHAVIOR="$(tmux show-option -gqv '@palette_esc')"
+ESC_BEHAVIOR="${ESC_BEHAVIOR:-back}"
+
+FZF_OPTS=(
+  --layout=reverse
+  --no-info
+  --no-scrollbar
+  --no-border
+  --height=100%
+)
 
 mkdir -p "$(dirname "$HISTORY_FILE")"
 
@@ -37,8 +47,8 @@ COMMANDS=(
   "Rename session	command-prompt -I '#S' 'rename-session \"%%\"'"
   "Choose window (tree)	choose-tree -w"
   "Choose session (tree)	choose-tree -s"
-  "Switch to session	!tmux list-sessions -F '#{session_name}' | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100% --prompt='session> ' | xargs -I{} tmux switch-client -t '{}'"
-  "Switch to window	!tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name}' | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100% --prompt='window> ' | cut -d' ' -f1 | xargs -I{} tmux select-window -t '{}'"
+  "Switch to session	@pick_session"
+  "Switch to window	@pick_window"
   "Switch to previous session	switch-client -p"
   "Switch to next session	switch-client -n"
   "Move window left	swap-window -t -1"
@@ -48,7 +58,7 @@ COMMANDS=(
   "Rotate panes	rotate-window"
   "Last session	switch-client -l"
   "Paste buffer	paste-buffer"
-  "List buffers	list-buffers | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
+  "List buffers	@pick_buffer"
   "Choose buffer	choose-buffer"
   "Clear pane history	clear-history"
   "Mark pane	select-pane -m"
@@ -57,10 +67,40 @@ COMMANDS=(
   "Display pane numbers	display-panes"
   "Toggle synchronize panes	set-option synchronize-panes"
   "Enter copy mode	copy-mode"
-  "List all key bindings	list-keys | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
-  "Show messages	show-messages | fzf --layout=reverse --no-info --no-scrollbar --no-border --height=100%"
+  "List all key bindings	@pick_keys"
+  "Show messages	@pick_messages"
   "Clock mode	clock-mode"
 )
+
+pick_session() {
+  local sel
+  sel="$(tmux list-sessions -F '#{session_name}' | fzf "${FZF_OPTS[@]}" --prompt='session> ')"
+  [[ -n "$sel" ]] && tmux switch-client -t "$sel"
+  [[ -n "$sel" ]]
+}
+
+pick_window() {
+  local sel
+  sel="$(tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name}' | fzf "${FZF_OPTS[@]}" --prompt='window> ')"
+  if [[ -n "$sel" ]]; then
+    local target="${sel%% *}"
+    tmux select-window -t "$target"
+    tmux switch-client -t "${target%%:*}"
+  fi
+  [[ -n "$sel" ]]
+}
+
+pick_buffer() {
+  tmux list-buffers | fzf "${FZF_OPTS[@]}" --prompt='buffer> '
+}
+
+pick_keys() {
+  tmux list-keys | fzf "${FZF_OPTS[@]}" --prompt='key> '
+}
+
+pick_messages() {
+  tmux show-messages | fzf "${FZF_OPTS[@]}" --prompt='msg> '
+}
 
 build_list() {
   declare -A seen
@@ -84,34 +124,44 @@ build_list() {
   done
 }
 
-selection="$(
-  build_list | fzf \
-    --prompt="  " \
-    --layout=reverse \
-    --no-info \
-    --no-scrollbar \
-    --no-border \
-    --delimiter=$'\t' \
-    --with-nth=1 \
-    --height=100% \
-    --bind='ctrl-d:half-page-down,ctrl-u:half-page-up'
-)"
+run_command() {
+  local cmd="$1"
+  if [[ "$cmd" == @* ]]; then
+    "${cmd#@}"
+  else
+    eval "tmux $cmd"
+  fi
+}
 
-[[ -z "$selection" ]] && exit 0
+while true; do
+  selection="$(
+    build_list | fzf \
+      "${FZF_OPTS[@]}" \
+      --prompt="  " \
+      --delimiter=$'\t' \
+      --with-nth=1 \
+      --bind='ctrl-d:half-page-down,ctrl-u:half-page-up'
+  )"
 
-label="$(echo "$selection" | cut -f1 | sed 's/^[* ] //')"
-cmd="$(echo "$selection" | cut -f2)"
+  [[ -z "$selection" ]] && exit 0
 
-printf '%s\t%s\n' "$label" "$cmd" >> "$HISTORY_FILE"
+  label="$(echo "$selection" | cut -f1 | sed 's/^[* ] //')"
+  cmd="$(echo "$selection" | cut -f2)"
 
-tail_count="$(wc -l < "$HISTORY_FILE")"
-if (( tail_count > MAX_HISTORY * 2 )); then
-  tail -n "$MAX_HISTORY" "$HISTORY_FILE" > "${HISTORY_FILE}.tmp"
-  mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
-fi
+  printf '%s\t%s\n' "$label" "$cmd" >> "$HISTORY_FILE"
 
-if [[ "$cmd" == !* ]]; then
-  eval "${cmd#!}"
-else
-  eval "tmux $cmd"
-fi
+  tail_count="$(wc -l < "$HISTORY_FILE")"
+  if (( tail_count > MAX_HISTORY * 2 )); then
+    tail -n "$MAX_HISTORY" "$HISTORY_FILE" > "${HISTORY_FILE}.tmp"
+    mv "${HISTORY_FILE}.tmp" "$HISTORY_FILE"
+  fi
+
+  run_command "$cmd"
+  result=$?
+
+  if [[ "$cmd" != @* ]] || [[ $result -eq 0 ]]; then
+    break
+  fi
+
+  [[ "$ESC_BEHAVIOR" == "close" ]] && break
+done
