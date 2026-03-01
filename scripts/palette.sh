@@ -58,6 +58,7 @@ COMMANDS=(
   "Swap window with	@pick_swap_window"
   "Last window	last-window"
   "Break pane to new window	break-pane"
+  "Move pane to window	@pick_move_pane"
   "Rotate panes	rotate-window"
   "Last session	switch-client -l"
   "Paste buffer	paste-buffer"
@@ -81,6 +82,14 @@ pick_swap_window() {
   sel="$(tmux list-windows -F '#{window_index} #{window_name}' | grep -v "^${current} " | fzf "${FZF_OPTS[@]}" --prompt='swap with> ' | cut -d' ' -f1)"
   [[ -z "$sel" ]] && return 1
   tmux swap-window -t "$sel"
+}
+
+pick_move_pane() {
+  local sel
+  sel="$(tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name}' | fzf "${FZF_OPTS[@]}" --prompt='move to> ')"
+  [[ -z "$sel" ]] && return 1
+  local target="${sel%% *}"
+  tmux join-pane -t "$target"
 }
 
 pick_kill_session() {
