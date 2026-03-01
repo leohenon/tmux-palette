@@ -55,6 +55,7 @@ COMMANDS=(
   "Switch to next session	switch-client -n"
   "Move window left	swap-window -t -1"
   "Move window right	swap-window -t +1"
+  "Swap window with	@pick_swap_window"
   "Last window	last-window"
   "Break pane to new window	break-pane"
   "Rotate panes	rotate-window"
@@ -73,6 +74,14 @@ COMMANDS=(
   "Show messages	@pick_messages"
   "Clock mode	clock-mode"
 )
+
+pick_swap_window() {
+  local current sel
+  current="$(tmux display-message -p '#{window_index}')"
+  sel="$(tmux list-windows -F '#{window_index} #{window_name}' | grep -v "^${current} " | fzf "${FZF_OPTS[@]}" --prompt='swap with> ' | cut -d' ' -f1)"
+  [[ -z "$sel" ]] && return 1
+  tmux swap-window -t "$sel"
+}
 
 pick_kill_session() {
   local current sel
