@@ -27,6 +27,7 @@ COMMANDS=(
   "Kill current pane	kill-pane"
   "Kill current window	kill-window"
   "Kill current session	kill-session"
+  "Kill another session	@pick_kill_session"
   "New session	@pick_new_session"
   "New directory	@create_dir"
   "Kill all other panes	kill-pane -a"
@@ -72,6 +73,14 @@ COMMANDS=(
   "Show messages	@pick_messages"
   "Clock mode	clock-mode"
 )
+
+pick_kill_session() {
+  local current sel
+  current="$(tmux display-message -p '#{session_name}')"
+  sel="$(tmux list-sessions -F '#{session_name}' | grep -v "^${current}$" | fzf "${FZF_OPTS[@]}" --prompt='kill session> ')"
+  [[ -z "$sel" ]] && return 1
+  tmux kill-session -t "$sel"
+}
 
 create_dir() {
   local parent name
