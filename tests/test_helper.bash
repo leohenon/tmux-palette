@@ -71,6 +71,7 @@ teardown_common() {
 
 source_palette() {
   export MAX_HISTORY=50
+  export CUSTOM_COMMANDS_FILE="${HOME}/.tmux/palette_commands"
   export ESC_BEHAVIOR="back"
 
   local FZF_OPTS=(
@@ -82,7 +83,7 @@ source_palette() {
   )
   export FZF_OPTS
 
-  eval "$(sed -n '23,188p' "$PROJECT_ROOT/scripts/palette.sh")"
+  eval "$(sed -n '24,199p' "$PROJECT_ROOT/scripts/palette.sh")"
 }
 
 run_main_loop() {

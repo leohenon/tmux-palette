@@ -75,6 +75,61 @@ teardown() {
   [[ "$first_line" == *"some-custom-command"* ]]
 }
 
+@test "custom commands appear after catalogue" {
+  mkdir -p "$(dirname "$CUSTOM_COMMANDS_FILE")"
+  printf 'My custom cmd\trun-custom\n' > "$CUSTOM_COMMANDS_FILE"
+  local output
+  output="$(build_list)"
+  local catalogue_line custom_line
+  catalogue_line="$(echo "$output" | grep -n 'split-window -h' | head -1 | cut -d: -f1)"
+  custom_line="$(echo "$output" | grep -n 'run-custom' | head -1 | cut -d: -f1)"
+  [[ "$catalogue_line" -lt "$custom_line" ]]
+}
+
+@test "custom commands are deduped against history" {
+  printf 'My custom cmd\trun-custom\n' > "$HISTORY_FILE"
+  mkdir -p "$(dirname "$CUSTOM_COMMANDS_FILE")"
+  printf 'My custom cmd\trun-custom\n' > "$CUSTOM_COMMANDS_FILE"
+  local output count
+  output="$(build_list)"
+  count="$(echo "$output" | grep -c 'run-custom')"
+  [[ "$count" -eq 1 ]]
+}
+
+@test "empty custom commands file is handled gracefully" {
+  mkdir -p "$(dirname "$CUSTOM_COMMANDS_FILE")"
+  : > "$CUSTOM_COMMANDS_FILE"
+  local output count
+  output="$(build_list)"
+  count="$(echo "$output" | wc -l | tr -d ' ')"
+  [[ "$count" -eq "${#COMMANDS[@]}" ]]
+}
+
+@test "missing custom commands file is handled gracefully" {
+  rm -f "$CUSTOM_COMMANDS_FILE"
+  local output count
+  output="$(build_list)"
+  count="$(echo "$output" | wc -l | tr -d ' ')"
+  [[ "$count" -eq "${#COMMANDS[@]}" ]]
+}
+
+@test "custom file without trailing newline still reads last line" {
+  mkdir -p "$(dirname "$CUSTOM_COMMANDS_FILE")"
+  printf 'My custom cmd\trun-custom' > "$CUSTOM_COMMANDS_FILE"
+  local output
+  output="$(build_list)"
+  echo "$output" | grep -q 'run-custom'
+}
+
+@test "comment lines in custom file are skipped" {
+  mkdir -p "$(dirname "$CUSTOM_COMMANDS_FILE")"
+  printf '# a comment\tignored\nReal cmd\trun-real\n' > "$CUSTOM_COMMANDS_FILE"
+  local output
+  output="$(build_list)"
+  echo "$output" | grep -q 'run-real'
+  ! echo "$output" | grep -q 'ignored'
+}
+
 @test "MAX_HISTORY limit is respected in build_list" {
   MAX_HISTORY=3
   for i in $(seq 1 10); do

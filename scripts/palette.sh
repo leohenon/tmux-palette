@@ -6,6 +6,7 @@ if ! command -v fzf &>/dev/null; then
 fi
 
 HISTORY_FILE="${HOME}/.tmux/palette_history"
+CUSTOM_COMMANDS_FILE="${HOME}/.tmux/palette_commands"
 MAX_HISTORY=50
 ESC_BEHAVIOR="$(tmux show-option -gqv '@tmux_palette_esc')"
 ESC_BEHAVIOR="${ESC_BEHAVIOR:-back}"
@@ -176,6 +177,16 @@ build_list() {
       printf '%s\t%s\n' "$label" "$cmd"
     fi
   done
+
+  if [[ -s "$CUSTOM_COMMANDS_FILE" ]]; then
+    while IFS=$'\t' read -r label cmd || [[ -n "$label" ]]; do
+      [[ -z "$label" || -z "$cmd" || "$label" == \#* ]] && continue
+      if [[ -z "${seen[$cmd]}" ]]; then
+        seen[$cmd]=1
+        printf '%s\t%s\n' "$label" "$cmd"
+      fi
+    done < "$CUSTOM_COMMANDS_FILE"
+  fi
 }
 
 run_command() {

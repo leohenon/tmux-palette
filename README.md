@@ -1,6 +1,6 @@
 # tmux-palette
 
-A simple fuzzy command palette for tmux. Press a key, search for any command, run it. Most recently used commands float to the top.
+A fzf command palette for tmux. Press a key, search for any command, run it. Most recently used commands float to the top.
 
 ![demo](assets/demo.gif)
 
@@ -39,6 +39,17 @@ New (from directory picker), switch, kill current, kill another, last, next/prev
 ### Other
 
 New directory (pick a parent, name it), list key bindings, list buffers, show messages, reload config, paste buffer, clear history, detach, clock.
+
+## Custom Commands
+
+Add your own commands by creating `~/.tmux/palette_commands` with tab-separated entries:
+
+```
+My command	send-keys 'echo hello' Enter
+Restart server	run-shell 'systemctl restart myapp'
+```
+
+Each line is `Label<TAB>tmux-command`.
 
 ## Options
 
