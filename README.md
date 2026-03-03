@@ -1,6 +1,6 @@
 # tmux-palette
 
-A fzf command palette for tmux. Press a key, search for any command, run it. Most recently used commands float to the top.
+A fzf command palette for tmux. Press a key, search for any command, create a directory or add your own custom commands. Most recently used commands float to the top.
 
 ![demo](assets/demo.gif)
 
