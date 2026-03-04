@@ -19,11 +19,12 @@ teardown() {
   [[ "$first_line" == *"Split pane horizontally"* ]]
 }
 
-@test "catalogue entries all appear with empty history" {
+@test "catalogue entries and sessions all appear with empty history" {
   local output count
   output="$(build_list)"
   count="$(echo "$output" | wc -l | tr -d ' ')"
-  [[ "$count" -eq "${#COMMANDS[@]}" ]]
+  # COMMANDS + 3 mock sessions (test-session, other-session, dev)
+  [[ "$count" -eq $(( ${#COMMANDS[@]} + 3 )) ]]
 }
 
 @test "history entries appear before catalogue" {
@@ -102,7 +103,7 @@ teardown() {
   local output count
   output="$(build_list)"
   count="$(echo "$output" | wc -l | tr -d ' ')"
-  [[ "$count" -eq "${#COMMANDS[@]}" ]]
+  [[ "$count" -eq $(( ${#COMMANDS[@]} + 3 )) ]]
 }
 
 @test "missing custom commands file is handled gracefully" {
@@ -110,7 +111,7 @@ teardown() {
   local output count
   output="$(build_list)"
   count="$(echo "$output" | wc -l | tr -d ' ')"
-  [[ "$count" -eq "${#COMMANDS[@]}" ]]
+  [[ "$count" -eq $(( ${#COMMANDS[@]} + 3 )) ]]
 }
 
 @test "custom file without trailing newline still reads last line" {
@@ -128,6 +129,22 @@ teardown() {
   output="$(build_list)"
   echo "$output" | grep -q 'run-real'
   ! echo "$output" | grep -q 'ignored'
+}
+
+@test "sessions appear in the palette list with Session: prefix" {
+  local output
+  output="$(build_list)"
+  echo "$output" | grep -q 'Session: test-session'
+  echo "$output" | grep -q 'Session: other-session'
+  echo "$output" | grep -q 'Session: dev'
+}
+
+@test "sessions are deduped against history" {
+  printf 'Session: dev\tswitch-client -t dev\n' > "$HISTORY_FILE"
+  local output count
+  output="$(build_list)"
+  count="$(echo "$output" | grep -c 'switch-client -t dev')"
+  [[ "$count" -eq 1 ]]
 }
 
 @test "MAX_HISTORY limit is respected in build_list" {

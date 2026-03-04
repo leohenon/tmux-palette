@@ -48,7 +48,6 @@ COMMANDS=(
   "Zoom/unzoom pane	resize-pane -Z"
   "Rename window	command-prompt -I '#W' 'rename-window \"%%\"'"
   "Rename session	command-prompt -I '#S' 'rename-session \"%%\"'"
-  "Switch to session	@pick_session"
   "Switch to window	@pick_window"
   "Switch to previous session	switch-client -p"
   "Switch to next session	switch-client -n"
@@ -175,6 +174,16 @@ build_list() {
     if [[ -z "${seen[$cmd]}" ]]; then
       seen[$cmd]=1
       printf '%s\t%s\n' "$label" "$cmd"
+    fi
+  done
+
+  local _session _scmd
+  tmux list-sessions -F '#{session_name}' | while IFS= read -r _session; do
+    [[ -z "$_session" ]] && continue
+    _scmd="switch-client -t ${_session}"
+    if [[ -z "${seen[$_scmd]}" ]]; then
+      seen[$_scmd]=1
+      printf '%s\t%s\n' "Session: ${_session}" "$_scmd"
     fi
   done
 

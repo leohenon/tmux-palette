@@ -18,7 +18,7 @@ teardown() {
     source_palette
     fzf() { echo ""; return 1; }
     export -f fzf
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
 }
@@ -42,7 +42,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
   grep -q "New window" "$TEST_TMPDIR/palette_history"
@@ -67,7 +67,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
   ! grep -q "SHOULD NOT REACH" "$TEST_TMPDIR/palette_history"
@@ -93,7 +93,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
 }
@@ -119,7 +119,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
   local count
@@ -148,7 +148,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
   local count
@@ -176,7 +176,7 @@ teardown() {
     }
     export -f fzf
     HISTORY_FILE="'"$TEST_TMPDIR"'/palette_history"
-    source <(sed -n "201,238p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
+    source <(sed -n "210,247p" "'"$PROJECT_ROOT"'/scripts/palette.sh")
   '
   [[ "$status" -eq 0 ]]
   [[ "$output" == *"Config reloaded"* ]]
